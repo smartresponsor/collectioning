@@ -1,0 +1,19 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\Collectioning\Factory\:
+        resource: '../src/Factory/'
+
+    App\Collectioning\Resolver\:
+        resource: '../src/Resolver/'
+
+    App\Collectioning\Service\:
+        resource: '../src/Service/'
+
+    App\Collectioning\ServiceInterface\CollectionDefinitionFactoryInterface: '@App\Collectioning\Factory\DoctrineCollectionDefinitionFactory'
+    App\Collectioning\ServiceInterface\CollectionQueryProcessorInterface: '@App\Collectioning\Service\DoctrineCollectionQueryProcessor'
+    App\Collectioning\ServiceInterface\CollectionQueryRequestResolverInterface: '@App\Collectioning\Resolver\CollectionQueryRequestResolver'
+    App\Collectioning\ServiceInterface\CollectionRequestReaderInterface: '@App\Collectioning\Service\CollectionRequestReader'
+    App\Collectioning\ServiceInterface\CollectionRealtimePublisherInterface: '@App\Collectioning\Service\MercureCollectionRealtimePublisher'

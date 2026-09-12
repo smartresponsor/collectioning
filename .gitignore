@@ -1,0 +1,10 @@
+/.idea/
+/*.iml
+/vendor/
+/var/
+/.phpunit.cache/
+/.phpunit.result.cache
+/.env.local
+/.env.*.local
+.DS_Store
+Thumbs.db
