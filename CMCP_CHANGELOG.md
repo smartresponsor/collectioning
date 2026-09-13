@@ -126,3 +126,12 @@
 - Integration coverage verifies offset diagnostics, cursor-mode diagnostics, stable identifier tie-breakers, projection reporting, and exclusion of unknown filter operators.
 - Final gates: PHPUnit 18/18 with 96 assertions; PHPStan 0 errors; PHP-CS-Fixer 0 pending fixes; strict Composer validation/check-lock valid; Composer audit reports no security vulnerability advisories.
 - Final Canon040 coverage: lines 95.41% (250/262), methods 81.81% (18/22), branches 88.69% (259/292).
+
+## Growth continuation — performance instrumentation
+
+- Extended existing provider-neutral diagnostics with aggregate execution metrics rather than introducing a new public instrumentation API.
+- `DoctrineCollectionQueryProcessor` now uses monotonic `hrtime(true)` timing and increments an execution counter at each actual Doctrine query execution.
+- `diagnostics.metrics` exposes only `durationMs`, `queryCount`, `returnedItems`, `total`, and `filteredTotal`; no SQL/DQL, parameter values, search text, filters, or cursor contents are added.
+- Integration coverage verifies exact query/count metrics while treating duration as a non-negative observational float to avoid flaky timing thresholds.
+- Final gates: PHPUnit 18/18 with 103 assertions; PHPStan 0 errors; PHP-CS-Fixer 0 pending fixes; strict Composer validation/check-lock valid; Composer audit reports no security vulnerability advisories.
+- Final Canon040 coverage: lines 95.63% (263/275), methods 81.81% (18/22), branches 88.69% (259/292).

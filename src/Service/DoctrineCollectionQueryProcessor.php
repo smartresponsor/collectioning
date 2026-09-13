@@ -19,6 +19,9 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
 
     public function process(CollectionDefinitionDTO $definition, CollectionQueryDTO $query): CollectionResultDTO
     {
+        $startedAt = hrtime(true);
+        $executedQueries = 0;
+
         $manager = $this->managerRegistry->getManagerForClass($definition->entityClass);
         if (!$manager instanceof EntityManagerInterface) {
             throw new \InvalidArgumentException(sprintf('No Doctrine ORM manager for collection entity "%s".', $definition->entityClass));
@@ -30,6 +33,7 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
         }
 
         $base = $manager->createQueryBuilder()->from($definition->entityClass, 'entity');
+        ++$executedQueries;
         $total = (int) (clone $base)->select('COUNT(entity)')->getQuery()->getSingleScalarResult();
 
         $filtered = clone $base;
@@ -80,6 +84,7 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             $filtered->setParameter($name, $filter->value);
         }
 
+        ++$executedQueries;
         $filteredTotal = (int) (clone $filtered)
             ->select('COUNT(entity)')
             ->resetDQLPart('orderBy')
@@ -159,6 +164,7 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             $filtered->select('entity');
         }
 
+        ++$executedQueries;
         $items = $filtered
             ->setFirstResult($cursorApplied ? 0 : $query->page->offset())
             ->setMaxResults($query->page->size + 1)
@@ -216,6 +222,7 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             unset($item);
         }
 
+        $durationMs = round((hrtime(true) - $startedAt) / 1_000_000, 3);
         $diagnostics = [
             'searchApplied' => [] !== $searchFields,
             'searchFields' => $searchFields,
@@ -226,6 +233,13 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             ),
             'paginationMode' => $cursorApplied ? 'cursor' : 'offset',
             'projection' => $effectiveProjection,
+            'metrics' => [
+                'durationMs' => $durationMs,
+                'queryCount' => $executedQueries,
+                'returnedItems' => count($items),
+                'total' => $total,
+                'filteredTotal' => $filteredTotal,
+            ],
         ];
 
         return new CollectionResultDTO(array_values($items), $total, $filteredTotal, $query->page, $nextCursor, $diagnostics);

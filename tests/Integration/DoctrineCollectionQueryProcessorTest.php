@@ -58,6 +58,9 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
             ['id' => 1, 'name' => 'Alpha'],
             ['id' => 3, 'name' => 'Alfred'],
         ], $result->items);
+        $diagnostics = $result->diagnostics;
+        $metrics = $diagnostics['metrics'];
+        unset($diagnostics['metrics']);
         self::assertSame([
             'searchApplied' => true,
             'searchFields' => ['name'],
@@ -68,7 +71,13 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
             ],
             'paginationMode' => 'offset',
             'projection' => ['id', 'name'],
-        ], $result->diagnostics);
+        ], $diagnostics);
+        self::assertIsFloat($metrics['durationMs']);
+        self::assertGreaterThanOrEqual(0.0, $metrics['durationMs']);
+        self::assertSame(3, $metrics['queryCount']);
+        self::assertSame(2, $metrics['returnedItems']);
+        self::assertSame(3, $metrics['total']);
+        self::assertSame(2, $metrics['filteredTotal']);
     }
 
     public function testProcessUsesStableIdentifierOrderingForUnspecifiedSort(): void
