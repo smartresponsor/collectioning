@@ -41,7 +41,7 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
                     continue;
                 }
                 $name = 'search_'.$parameter++;
-                $or->add(sprintf('LOWER(CAST(entity.%s AS string)) LIKE :%s', $field, $name));
+                $or->add(sprintf('LOWER(entity.%s) LIKE :%s', $field, $name));
                 $filtered->setParameter($name, '%'.mb_strtolower($query->search).'%');
             }
             if ($or->count() > 0) {
