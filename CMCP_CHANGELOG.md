@@ -79,3 +79,14 @@
 - Signed implementation commit created: `749f5db` (`Harden collection query pagination and quality gates`).
 - `.gating/` remains pre-existing untracked state and is deliberately excluded from commits.
 - This journal closure is committed separately so the implementation commit identity can be recorded factually; current branch is then published to its configured upstream and re-inspected.
+
+## Development continuation
+
+- Continued after RC publication to close canonical coverage debt before adding new query capabilities.
+- Added behavioral coverage for Doctrine metadata policy derivation and Symfony extension loading/alias contracts without widening Collectioning responsibility.
+- The extension load test exposed a real package-integrity defect: `CollectioningExtension` uses Symfony `YamlFileLoader`, but `symfony/yaml` was not declared. Added runtime dependency `symfony/yaml:^8.1`; Composer resolved and locked `symfony/yaml v8.1.6`.
+- Added an in-memory SQLite/Doctrine integration test for the core `DoctrineCollectionQueryProcessor`, covering total/filtered counts, case-insensitive search, field-policy filtering, explicit sort precedence, projection, stable identifier fallback ordering, and offset pagination.
+- Doctrine test bootstrap uses PHP 8.4 native lazy objects rather than adding the legacy proxy dependency path.
+- Final canonical coverage: lines 98.51% (133/135), methods 81.81% (18/22), branches 90.78% (128/141), satisfying Canon040 thresholds in every dimension.
+- Final gates: PHPUnit 14/14 with 62 assertions; PHPStan 0 errors; PHP-CS-Fixer 0 pending fixes; strict Composer validation/check-lock valid; Composer audit reports no security vulnerability advisories.
+- No new public Collectioning capability was added in this continuation: the work hardened existing runtime semantics and package installability first.
