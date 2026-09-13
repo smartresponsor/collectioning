@@ -31,7 +31,19 @@ final readonly class CollectionQueryRequestResolver implements CollectionQueryRe
                 continue;
             }
 
-            $filters[] = new CollectionFilterDTO($field, 'eq', $value);
+            $fieldPolicy = $allowed[$field];
+            if (!is_array($value)) {
+                if (in_array('eq', $fieldPolicy->filterOperators, true)) {
+                    $filters[] = new CollectionFilterDTO($field, 'eq', $value);
+                }
+                continue;
+            }
+
+            foreach ($value as $operator => $operand) {
+                if (is_string($operator) && in_array($operator, $fieldPolicy->filterOperators, true) && !is_array($operand)) {
+                    $filters[] = new CollectionFilterDTO($field, $operator, $operand);
+                }
+            }
         }
 
         $sorts = [];

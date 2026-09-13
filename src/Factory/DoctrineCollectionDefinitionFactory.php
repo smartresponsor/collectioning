@@ -28,9 +28,14 @@ final readonly class DoctrineCollectionDefinitionFactory implements CollectionDe
         foreach ($metadata->getFieldNames() as $field) {
             $type = $metadata->getTypeOfField($field);
             $searchable = in_array($type, ['string', 'text', 'ascii_string'], true);
-            $filterable = in_array($type, ['string', 'text', 'ascii_string', 'integer', 'smallint', 'bigint', 'boolean', 'guid', 'uuid', 'ulid'], true);
+            $filterable = in_array($type, ['string', 'text', 'ascii_string', 'integer', 'smallint', 'bigint', 'decimal', 'float', 'boolean', 'guid', 'uuid', 'ulid'], true);
             $sortable = !in_array($type, ['blob', 'binary'], true);
-            $fields[] = new CollectionFieldPolicyDTO($field, $searchable, $filterable, $sortable, true);
+            $filterOperators = ['eq', 'neq'];
+            if (in_array($type, ['integer', 'smallint', 'bigint', 'decimal', 'float'], true)) {
+                $filterOperators = [...$filterOperators, 'lt', 'lte', 'gt', 'gte'];
+            }
+
+            $fields[] = new CollectionFieldPolicyDTO($field, $searchable, $filterable, $sortable, true, $filterOperators);
         }
 
         $identifierFields = array_values(array_filter(

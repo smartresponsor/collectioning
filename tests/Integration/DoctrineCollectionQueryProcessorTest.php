@@ -73,6 +73,41 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
         self::assertSame(2, $result->items[0]->id);
     }
 
+    public function testProcessAppliesTypedComparisonOperators(): void
+    {
+        $query = new CollectionQueryDTO(
+            page: new CollectionPageDTO(1, 10),
+            filters: [
+                new CollectionFilterDTO('id', 'gte', 2),
+                new CollectionFilterDTO('id', 'neq', 3),
+            ],
+        );
+
+        $result = $this->processor()->process($this->definition(), $query);
+
+        self::assertSame(3, $result->total);
+        self::assertSame(1, $result->filteredTotal);
+        self::assertCount(1, $result->items);
+        self::assertInstanceOf(CollectioningProcessorFixture::class, $result->items[0]);
+        self::assertSame(2, $result->items[0]->id);
+    }
+
+    public function testProcessIgnoresUnknownExecutorOperatorEvenWhenPolicyListsIt(): void
+    {
+        $definition = new CollectionDefinitionDTO(CollectioningProcessorFixture::class, [
+            new CollectionFieldPolicyDTO('id', false, true, true, true, ['eq', 'raw']),
+        ], identifierFields: ['id']);
+        $query = new CollectionQueryDTO(
+            page: new CollectionPageDTO(1, 10),
+            filters: [new CollectionFilterDTO('id', 'raw', '>= 2')],
+        );
+
+        $result = $this->processor()->process($definition, $query);
+
+        self::assertSame(3, $result->filteredTotal);
+        self::assertCount(3, $result->items);
+    }
+
     private function processor(): DoctrineCollectionQueryProcessor
     {
         $registry = $this->createStub(ManagerRegistry::class);
@@ -84,9 +119,9 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
     private function definition(): CollectionDefinitionDTO
     {
         return new CollectionDefinitionDTO(CollectioningProcessorFixture::class, [
-            new CollectionFieldPolicyDTO('id', false, true, true, true),
-            new CollectionFieldPolicyDTO('name', true, true, true, true),
-            new CollectionFieldPolicyDTO('status', false, true, true, true),
+            new CollectionFieldPolicyDTO('id', false, true, true, true, ['eq', 'neq', 'lt', 'lte', 'gt', 'gte']),
+            new CollectionFieldPolicyDTO('name', true, true, true, true, ['eq', 'neq']),
+            new CollectionFieldPolicyDTO('status', false, true, true, true, ['eq', 'neq']),
         ], identifierFields: ['id']);
     }
 }

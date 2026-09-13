@@ -90,3 +90,14 @@
 - Final canonical coverage: lines 98.51% (133/135), methods 81.81% (18/22), branches 90.78% (128/141), satisfying Canon040 thresholds in every dimension.
 - Final gates: PHPUnit 14/14 with 62 assertions; PHPStan 0 errors; PHP-CS-Fixer 0 pending fixes; strict Composer validation/check-lock valid; Composer audit reports no security vulnerability advisories.
 - No new public Collectioning capability was added in this continuation: the work hardened existing runtime semantics and package installability first.
+
+## Growth continuation — typed filters
+
+- Added policy-driven typed filter capabilities to `CollectionFieldPolicyDTO`; equality-only behavior remains the default for manually constructed policies.
+- `DoctrineCollectionDefinitionFactory` now derives `eq`/`neq` for filterable scalar fields and adds `lt`/`lte`/`gt`/`gte` for numeric Doctrine types (`integer`, `smallint`, `bigint`, `decimal`, `float`). Decimal and float fields are now consistently filterable.
+- HTTP normalization preserves `filter[field]=value` as `eq` and adds nested operator syntax such as `filter[id][gte]=10`; unknown or disallowed operators are discarded by the resolver.
+- `DoctrineCollectionQueryProcessor` executes only a fixed DQL operator map after field-policy validation, so raw operator strings never reach query construction. An integration test verifies that even a malformed/future policy-listed unknown operator is ignored by the executor.
+- Added Doctrine integration coverage for composed `gte` + `neq` filtering and expanded factory/resolver contract assertions.
+- README now documents the backward-compatible scalar syntax, typed nested syntax, and operator capabilities.
+- Final gates: PHPUnit 16/16 with 76 assertions; PHPStan 0 errors; PHP-CS-Fixer 0 pending fixes; strict Composer validation/check-lock valid; Composer audit reports no security vulnerability advisories.
+- Final coverage remains above Canon040 in every dimension: lines 96.17% (151/157), methods 81.81% (18/22), branches 88.33% (159/180).

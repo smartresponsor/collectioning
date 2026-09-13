@@ -17,6 +17,7 @@ final class CollectionQueryRequestResolverTest extends TestCase
         $definition = new CollectionDefinitionDTO(\stdClass::class, [
             new CollectionFieldPolicyDTO('name', true, true, true),
             new CollectionFieldPolicyDTO('status', false, true, true),
+            new CollectionFieldPolicyDTO('priority', false, true, true, true, ['eq', 'neq', 'lt', 'lte', 'gt', 'gte']),
             new CollectionFieldPolicyDTO('secret', false, false, false, false),
         ], 25, 100);
 
@@ -24,7 +25,11 @@ final class CollectionQueryRequestResolverTest extends TestCase
             'page' => 2,
             'limit' => 500,
             'q' => ' Acme ',
-            'filter' => ['status' => 'active', 'secret' => 'hidden'],
+            'filter' => [
+                'status' => 'active',
+                'priority' => ['gte' => '10', 'unknown' => 'ignored'],
+                'secret' => 'hidden',
+            ],
             'sort' => '-name,secret',
             'fields' => 'name,secret',
         ]);
@@ -35,8 +40,13 @@ final class CollectionQueryRequestResolverTest extends TestCase
         self::assertSame(100, $query->page->size);
         self::assertSame(100, $query->page->offset());
         self::assertSame('Acme', $query->search);
-        self::assertCount(1, $query->filters);
+        self::assertCount(2, $query->filters);
         self::assertSame('status', $query->filters[0]->field);
+        self::assertSame('eq', $query->filters[0]->operator);
+        self::assertSame('active', $query->filters[0]->value);
+        self::assertSame('priority', $query->filters[1]->field);
+        self::assertSame('gte', $query->filters[1]->operator);
+        self::assertSame('10', $query->filters[1]->value);
         self::assertCount(1, $query->sorts);
         self::assertSame('name', $query->sorts[0]->field);
         self::assertSame('desc', $query->sorts[0]->direction);

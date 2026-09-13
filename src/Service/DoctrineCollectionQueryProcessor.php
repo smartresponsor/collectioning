@@ -53,8 +53,26 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             if (!isset($policy[$filter->field]) || !$policy[$filter->field]->filterable) {
                 continue;
             }
+
+            if (!in_array($filter->operator, $policy[$filter->field]->filterOperators, true)) {
+                continue;
+            }
+
+            $operator = match ($filter->operator) {
+                'eq' => '=',
+                'neq' => '<>',
+                'lt' => '<',
+                'lte' => '<=',
+                'gt' => '>',
+                'gte' => '>=',
+                default => null,
+            };
+            if (null === $operator) {
+                continue;
+            }
+
             $name = 'filter_'.$parameter++;
-            $filtered->andWhere(sprintf('entity.%s = :%s', $filter->field, $name));
+            $filtered->andWhere(sprintf('entity.%s %s :%s', $filter->field, $operator, $name));
             $filtered->setParameter($name, $filter->value);
         }
 
