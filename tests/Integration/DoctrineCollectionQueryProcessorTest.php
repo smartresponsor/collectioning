@@ -10,6 +10,7 @@ use App\Collectioning\DTO\CollectionFilterDTO;
 use App\Collectioning\DTO\CollectionPageDTO;
 use App\Collectioning\DTO\CollectionQueryDTO;
 use App\Collectioning\DTO\CollectionSortDTO;
+use App\Collectioning\Service\CollectionQueryPlanner;
 use App\Collectioning\Service\DoctrineCollectionQueryProcessor;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
@@ -183,7 +184,7 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
         $registry = $this->createStub(ManagerRegistry::class);
         $registry->method('getManagerForClass')->willReturn($this->entityManager);
 
-        return new DoctrineCollectionQueryProcessor($registry);
+        return new DoctrineCollectionQueryProcessor($registry, new CollectionQueryPlanner());
     }
 
     private function definition(): CollectionDefinitionDTO

@@ -36,4 +36,23 @@ final class MercureCollectionRealtimePublisherTest extends TestCase
             version: '7',
         ));
     }
+
+    public function testPublishSupportsCustomTrimmedTopicPrefix(): void
+    {
+        $hub = $this->createMock(HubInterface::class);
+        $hub->expects(self::once())
+            ->method('publish')
+            ->with(self::callback(static function (Update $update): bool {
+                self::assertSame(['tenant/orders'], $update->getTopics());
+
+                return true;
+            }));
+
+        $publisher = new MercureCollectionRealtimePublisher($hub, '/tenant/');
+        $publisher->publish(new CollectionChangeDTO(
+            collection: '/orders/',
+            operation: 'create',
+            identifier: 'abc',
+        ));
+    }
 }

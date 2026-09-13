@@ -135,3 +135,16 @@
 - Integration coverage verifies exact query/count metrics while treating duration as a non-negative observational float to avoid flaky timing thresholds.
 - Final gates: PHPUnit 18/18 with 103 assertions; PHPStan 0 errors; PHP-CS-Fixer 0 pending fixes; strict Composer validation/check-lock valid; Composer audit reports no security vulnerability advisories.
 - Final Canon040 coverage: lines 95.63% (263/275), methods 81.81% (18/22), branches 88.69% (259/292).
+
+## Growth continuation — provider-neutral query planning
+
+- Introduced `CollectionQueryPlanDTO` plus mirrored `CollectionQueryPlannerInterface` / `CollectionQueryPlanner` as the provider-neutral normalization boundary.
+- The planner now resolves searchable fields, canonical supported filter operators, field-policy filtering, deterministic stable sorts, public projection, and cursor applicability exactly once.
+- `DoctrineCollectionQueryProcessor` now consumes the normalized plan and no longer owns field-policy normalization; its responsibility is reduced to DQL/operator translation, cursor predicate construction, query execution, projection cleanup, cursor emission, diagnostics, and metrics.
+- Canonical filter operator support (`eq`, `neq`, `lt`, `lte`, `gt`, `gte`) is enforced in the shared planner, preventing future providers from accidentally accepting provider-specific raw operators.
+- `CollectionQueryPlanDTO::paginationMode()` provides canonical `offset` / `cursor` naming for provider consumers.
+- Symfony service configuration now binds `CollectionQueryPlannerInterface` to `CollectionQueryPlanner`; extension coverage verifies the planner definition and alias.
+- No artificial second backend was added. The abstraction is material because Doctrine now depends on the shared plan; a future provider can implement `CollectionQueryProcessorInterface` while reusing the same semantic planner.
+- Added focused planner tests covering allowed/disallowed filters, unknown fields, stable identifier tie-breakers, projection, cursor shape matching, absent cursor, no effective sorts, and empty definitions. Added explicit Mercure custom-prefix coverage while closing existing quality debt.
+- Final gates after canonical formatting: PHPUnit 23/23 with 131 assertions; PHPStan 0 errors; PHP-CS-Fixer 0 pending fixes; strict Composer validation/check-lock valid; Composer audit reports no security vulnerability advisories.
+- Final Canon040 coverage: lines 96.33% (289/300), methods 80.00% (20/25), branches 89.58% (284/317).

@@ -7,14 +7,17 @@ namespace App\Collectioning\Service;
 use App\Collectioning\DTO\CollectionDefinitionDTO;
 use App\Collectioning\DTO\CollectionQueryDTO;
 use App\Collectioning\DTO\CollectionResultDTO;
+use App\Collectioning\ServiceInterface\CollectionQueryPlannerInterface;
 use App\Collectioning\ServiceInterface\CollectionQueryProcessorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 final readonly class DoctrineCollectionQueryProcessor implements CollectionQueryProcessorInterface
 {
-    public function __construct(private ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        private ManagerRegistry $managerRegistry,
+        private CollectionQueryPlannerInterface $queryPlanner,
+    ) {
     }
 
     public function process(CollectionDefinitionDTO $definition, CollectionQueryDTO $query): CollectionResultDTO
@@ -27,10 +30,7 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             throw new \InvalidArgumentException(sprintf('No Doctrine ORM manager for collection entity "%s".', $definition->entityClass));
         }
 
-        $policy = [];
-        foreach ($definition->fields as $field) {
-            $policy[$field->field] = $field;
-        }
+        $plan = $this->queryPlanner->plan($definition, $query);
 
         $base = $manager->createQueryBuilder()->from($definition->entityClass, 'entity');
         ++$executedQueries;
@@ -38,15 +38,11 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
 
         $filtered = clone $base;
         $parameter = 0;
-        $searchFields = [];
+        $searchFields = $plan->searchFields;
         $effectiveFilters = [];
         if (null !== $query->search) {
             $or = $filtered->expr()->orX();
-            foreach ($policy as $field => $fieldPolicy) {
-                if (!$fieldPolicy->searchable) {
-                    continue;
-                }
-                $searchFields[] = $field;
+            foreach ($searchFields as $field) {
                 $name = 'search_'.$parameter++;
                 $or->add(sprintf('LOWER(entity.%s) LIKE :%s', $field, $name));
                 $filtered->setParameter($name, '%'.mb_strtolower($query->search).'%');
@@ -56,15 +52,7 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             }
         }
 
-        foreach ($query->filters as $filter) {
-            if (!isset($policy[$filter->field]) || !$policy[$filter->field]->filterable) {
-                continue;
-            }
-
-            if (!in_array($filter->operator, $policy[$filter->field]->filterOperators, true)) {
-                continue;
-            }
-
+        foreach ($plan->filters as $filter) {
             $operator = match ($filter->operator) {
                 'eq' => '=',
                 'neq' => '<>',
@@ -91,18 +79,10 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             ->getQuery()
             ->getSingleScalarResult();
 
-        $effectiveSorts = [];
-        foreach ($query->stableSorts($definition->identifierFields) as $sort) {
-            if (!isset($policy[$sort->field]) || !$policy[$sort->field]->sortable) {
-                continue;
-            }
+        $effectiveSorts = $plan->sorts;
 
-            $effectiveSorts[] = $sort;
-        }
-
-        $cursorFields = array_map(static fn ($sort): string => $sort->field, $effectiveSorts);
         $cursorApplied = false;
-        if (null !== $query->cursor && array_keys($query->cursor) === $cursorFields) {
+        if ($plan->cursorApplicable && null !== $query->cursor) {
             $cursorOr = $filtered->expr()->orX();
             foreach ($effectiveSorts as $index => $sort) {
                 $and = $filtered->expr()->andX();
@@ -136,14 +116,11 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
 
         $projectionCursorAliases = [];
         $projectionEnabled = false;
-        $effectiveProjection = [];
+        $effectiveProjection = $plan->projection;
         if ([] !== $query->fields) {
             $select = [];
-            foreach ($query->fields as $field) {
-                if (isset($policy[$field]) && $policy[$field]->projectable) {
-                    $effectiveProjection[] = $field;
-                    $select[] = sprintf('entity.%s AS %s', $field, $field);
-                }
+            foreach ($effectiveProjection as $field) {
+                $select[] = sprintf('entity.%s AS %s', $field, $field);
             }
 
             if ([] !== $select) {
