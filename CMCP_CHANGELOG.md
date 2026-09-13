@@ -116,3 +116,13 @@
 - Doctrine identifier selection was made explicit with a branch-testable loop while preserving exclusion of association identifiers and blob/binary identifiers.
 - Final gates: PHPUnit 18/18 with 88 assertions; PHPStan 0 errors; PHP-CS-Fixer 0 pending fixes; strict Composer validation/check-lock valid; Composer audit reports no security vulnerability advisories.
 - Final Canon040 coverage: lines 95.10% (233/245), methods 81.81% (18/22), branches 88.58% (256/289).
+
+## Growth continuation — query diagnostics
+
+- Added a trailing provider-neutral `diagnostics` payload to `CollectionResultDTO`; existing constructor calls remain compatible through the default empty array.
+- Doctrine processing now reports only the effective query plan: `searchApplied`, `searchFields`, applied filter `{field, operator}` pairs, effective stable sorts, pagination mode (`offset` or `cursor`), and public projection fields.
+- Diagnostics deliberately exclude SQL/DQL, search text, filter values, cursor contents, and bound parameter values to keep observability useful without leaking user/query data.
+- Diagnostics are derived after policy/executor validation, so rejected filters and disallowed sorts/projections do not appear as effective behavior.
+- Integration coverage verifies offset diagnostics, cursor-mode diagnostics, stable identifier tie-breakers, projection reporting, and exclusion of unknown filter operators.
+- Final gates: PHPUnit 18/18 with 96 assertions; PHPStan 0 errors; PHP-CS-Fixer 0 pending fixes; strict Composer validation/check-lock valid; Composer audit reports no security vulnerability advisories.
+- Final Canon040 coverage: lines 95.41% (250/262), methods 81.81% (18/22), branches 88.69% (259/292).

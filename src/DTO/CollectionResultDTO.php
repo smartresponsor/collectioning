@@ -6,13 +6,17 @@ namespace App\Collectioning\DTO;
 
 final readonly class CollectionResultDTO
 {
-    /** @param list<array<string, mixed>|object> $items */
+    /**
+     * @param list<array<string, mixed>|object> $items
+     * @param array<string, mixed>              $diagnostics
+     */
     public function __construct(
         public array $items,
         public int $total,
         public int $filteredTotal,
         public CollectionPageDTO $page,
         public ?string $nextCursor = null,
+        public array $diagnostics = [],
     ) {
     }
 

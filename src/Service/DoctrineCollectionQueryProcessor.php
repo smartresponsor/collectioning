@@ -34,12 +34,15 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
 
         $filtered = clone $base;
         $parameter = 0;
+        $searchFields = [];
+        $effectiveFilters = [];
         if (null !== $query->search) {
             $or = $filtered->expr()->orX();
             foreach ($policy as $field => $fieldPolicy) {
                 if (!$fieldPolicy->searchable) {
                     continue;
                 }
+                $searchFields[] = $field;
                 $name = 'search_'.$parameter++;
                 $or->add(sprintf('LOWER(entity.%s) LIKE :%s', $field, $name));
                 $filtered->setParameter($name, '%'.mb_strtolower($query->search).'%');
@@ -71,6 +74,7 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
                 continue;
             }
 
+            $effectiveFilters[] = ['field' => $filter->field, 'operator' => $filter->operator];
             $name = 'filter_'.$parameter++;
             $filtered->andWhere(sprintf('entity.%s %s :%s', $filter->field, $operator, $name));
             $filtered->setParameter($name, $filter->value);
@@ -127,10 +131,12 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
 
         $projectionCursorAliases = [];
         $projectionEnabled = false;
+        $effectiveProjection = [];
         if ([] !== $query->fields) {
             $select = [];
             foreach ($query->fields as $field) {
                 if (isset($policy[$field]) && $policy[$field]->projectable) {
+                    $effectiveProjection[] = $field;
                     $select[] = sprintf('entity.%s AS %s', $field, $field);
                 }
             }
@@ -210,6 +216,18 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             unset($item);
         }
 
-        return new CollectionResultDTO(array_values($items), $total, $filteredTotal, $query->page, $nextCursor);
+        $diagnostics = [
+            'searchApplied' => [] !== $searchFields,
+            'searchFields' => $searchFields,
+            'filters' => $effectiveFilters,
+            'sorts' => array_map(
+                static fn ($sort): array => ['field' => $sort->field, 'direction' => strtolower($sort->direction)],
+                $effectiveSorts,
+            ),
+            'paginationMode' => $cursorApplied ? 'cursor' : 'offset',
+            'projection' => $effectiveProjection,
+        ];
+
+        return new CollectionResultDTO(array_values($items), $total, $filteredTotal, $query->page, $nextCursor, $diagnostics);
     }
 }

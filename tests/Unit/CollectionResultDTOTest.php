@@ -15,6 +15,7 @@ final class CollectionResultDTOTest extends TestCase
         $result = new CollectionResultDTO([], 100, 51, new CollectionPageDTO(size: 25));
 
         self::assertSame(3, $result->pageCount());
+        self::assertSame([], $result->diagnostics);
     }
 
     public function testPageCountIsZeroForEmptyFilteredResult(): void
@@ -22,5 +23,6 @@ final class CollectionResultDTOTest extends TestCase
         $result = new CollectionResultDTO([], 100, 0, new CollectionPageDTO(size: 25));
 
         self::assertSame(0, $result->pageCount());
+        self::assertSame([], $result->diagnostics);
     }
 }

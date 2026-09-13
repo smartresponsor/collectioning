@@ -58,6 +58,17 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
             ['id' => 1, 'name' => 'Alpha'],
             ['id' => 3, 'name' => 'Alfred'],
         ], $result->items);
+        self::assertSame([
+            'searchApplied' => true,
+            'searchFields' => ['name'],
+            'filters' => [['field' => 'status', 'operator' => 'eq']],
+            'sorts' => [
+                ['field' => 'name', 'direction' => 'desc'],
+                ['field' => 'id', 'direction' => 'asc'],
+            ],
+            'paginationMode' => 'offset',
+            'projection' => ['id', 'name'],
+        ], $result->diagnostics);
     }
 
     public function testProcessUsesStableIdentifierOrderingForUnspecifiedSort(): void
@@ -101,6 +112,12 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
 
         self::assertSame([['name' => 'Alpha']], $second->items);
         self::assertNotNull($second->nextCursor);
+        self::assertSame('cursor', $second->diagnostics['paginationMode']);
+        self::assertSame([
+            ['field' => 'name', 'direction' => 'asc'],
+            ['field' => 'id', 'direction' => 'asc'],
+        ], $second->diagnostics['sorts']);
+        self::assertSame(['name'], $second->diagnostics['projection']);
     }
 
     public function testProcessFallsBackToOffsetWhenCursorShapeDoesNotMatchSorts(): void
@@ -148,6 +165,8 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
 
         self::assertSame(3, $result->filteredTotal);
         self::assertCount(3, $result->items);
+        self::assertSame([], $result->diagnostics['filters']);
+        self::assertFalse($result->diagnostics['searchApplied']);
     }
 
     private function processor(): DoctrineCollectionQueryProcessor
