@@ -62,12 +62,35 @@ final readonly class CollectionQueryRequestResolver implements CollectionQueryRe
             }
         }
 
+        $cursor = null;
+        $cursorToken = trim((string) $request->query->get('cursor', ''));
+        if ('' !== $cursorToken && strlen($cursorToken) <= 4096) {
+            $padding = (4 - strlen($cursorToken) % 4) % 4;
+            $decoded = base64_decode(strtr($cursorToken.str_repeat('=', $padding), '-_', '+/'), true);
+            if (false !== $decoded) {
+                try {
+                    $candidate = json_decode($decoded, true, 16, JSON_THROW_ON_ERROR);
+                } catch (\JsonException) {
+                    $candidate = null;
+                }
+
+                if (is_array($candidate) && !array_is_list($candidate)) {
+                    $keys = array_keys($candidate);
+                    if (count(array_filter($keys, 'is_string')) === count($keys)
+                        && count(array_filter($candidate, 'is_scalar')) === count($candidate)) {
+                        $cursor = $candidate;
+                    }
+                }
+            }
+        }
+
         return new CollectionQueryDTO(
             new CollectionPageDTO($pageNumber, $pageSize),
             '' === $search ? null : $search,
             $filters,
             $sorts,
             $fields,
+            $cursor,
         );
     }
 }

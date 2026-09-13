@@ -38,11 +38,17 @@ final readonly class DoctrineCollectionDefinitionFactory implements CollectionDe
             $fields[] = new CollectionFieldPolicyDTO($field, $searchable, $filterable, $sortable, true, $filterOperators);
         }
 
-        $identifierFields = array_values(array_filter(
-            $metadata->getIdentifierFieldNames(),
-            static fn (string $field): bool => $metadata->hasField($field)
-                && !in_array($metadata->getTypeOfField($field), ['blob', 'binary'], true),
-        ));
+        $identifierFields = [];
+        foreach ($metadata->getIdentifierFieldNames() as $field) {
+            if (!$metadata->hasField($field)) {
+                continue;
+            }
+            if (in_array($metadata->getTypeOfField($field), ['blob', 'binary'], true)) {
+                continue;
+            }
+
+            $identifierFields[] = $field;
+        }
 
         return new CollectionDefinitionDTO($entityClass, $fields, identifierFields: $identifierFields);
     }

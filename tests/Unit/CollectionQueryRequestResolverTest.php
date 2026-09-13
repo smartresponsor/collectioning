@@ -32,6 +32,7 @@ final class CollectionQueryRequestResolverTest extends TestCase
             ],
             'sort' => '-name,secret',
             'fields' => 'name,secret',
+            'cursor' => rtrim(strtr(base64_encode(json_encode(['name' => 'Acme', 'id' => 10], JSON_THROW_ON_ERROR)), '+/', '-_'), '='),
         ]);
 
         $query = (new CollectionQueryRequestResolver())->resolve($request, $definition);
@@ -51,5 +52,7 @@ final class CollectionQueryRequestResolverTest extends TestCase
         self::assertSame('name', $query->sorts[0]->field);
         self::assertSame('desc', $query->sorts[0]->direction);
         self::assertSame(['name'], $query->fields);
+        self::assertNotNull($query->cursor);
+        self::assertSame(['name' => 'Acme', 'id' => 10], $query->cursor);
     }
 }

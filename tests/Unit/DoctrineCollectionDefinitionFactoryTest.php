@@ -22,7 +22,7 @@ final class DoctrineCollectionDefinitionFactoryTest extends TestCase
             'payload' => 'blob',
             default => throw new \LogicException(sprintf('Unexpected fixture field "%s".', $field)),
         });
-        $metadata->method('getIdentifierFieldNames')->willReturn(['id', 'payload']);
+        $metadata->method('getIdentifierFieldNames')->willReturn(['id', 'payload', 'relation']);
         $metadata->method('hasField')->willReturnCallback(static fn (string $field): bool => in_array($field, ['id', 'name', 'payload'], true));
 
         $manager = $this->createMock(EntityManagerInterface::class);

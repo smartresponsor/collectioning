@@ -73,6 +73,48 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
         self::assertSame(2, $result->items[0]->id);
     }
 
+    public function testProcessSupportsCompositeCursorPaginationWithProjection(): void
+    {
+        $firstQuery = new CollectionQueryDTO(
+            page: new CollectionPageDTO(1, 1),
+            sorts: [new CollectionSortDTO('name', 'asc')],
+            fields: ['name'],
+        );
+
+        $first = $this->processor()->process($this->definition(), $firstQuery);
+
+        self::assertSame([['name' => 'Alfred']], $first->items);
+        self::assertNotNull($first->nextCursor);
+        $padding = (4 - strlen($first->nextCursor) % 4) % 4;
+        $decoded = base64_decode(strtr($first->nextCursor.str_repeat('=', $padding), '-_', '+/'), true);
+        self::assertNotFalse($decoded);
+        $cursor = json_decode($decoded, true, 16, JSON_THROW_ON_ERROR);
+        self::assertIsArray($cursor);
+        self::assertSame(['name' => 'Alfred', 'id' => 3], $cursor);
+
+        $second = $this->processor()->process($this->definition(), new CollectionQueryDTO(
+            page: new CollectionPageDTO(1, 1),
+            sorts: [new CollectionSortDTO('name', 'asc')],
+            fields: ['name'],
+            cursor: $cursor,
+        ));
+
+        self::assertSame([['name' => 'Alpha']], $second->items);
+        self::assertNotNull($second->nextCursor);
+    }
+
+    public function testProcessFallsBackToOffsetWhenCursorShapeDoesNotMatchSorts(): void
+    {
+        $result = $this->processor()->process($this->definition(), new CollectionQueryDTO(
+            page: new CollectionPageDTO(2, 1),
+            cursor: ['name' => 'Alpha'],
+        ));
+
+        self::assertCount(1, $result->items);
+        self::assertInstanceOf(CollectioningProcessorFixture::class, $result->items[0]);
+        self::assertSame(2, $result->items[0]->id);
+    }
+
     public function testProcessAppliesTypedComparisonOperators(): void
     {
         $query = new CollectionQueryDTO(

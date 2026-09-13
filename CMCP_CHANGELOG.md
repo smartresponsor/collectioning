@@ -101,3 +101,18 @@
 - README now documents the backward-compatible scalar syntax, typed nested syntax, and operator capabilities.
 - Final gates: PHPUnit 16/16 with 76 assertions; PHPStan 0 errors; PHP-CS-Fixer 0 pending fixes; strict Composer validation/check-lock valid; Composer audit reports no security vulnerability advisories.
 - Final coverage remains above Canon040 in every dimension: lines 96.17% (151/157), methods 81.81% (18/22), branches 88.33% (159/180).
+
+## Growth continuation — cursor pagination
+
+- Added optional keyset pagination alongside existing offset pagination. Offset remains the default and existing page/limit behavior is preserved.
+- `CollectionQueryDTO` carries an optional decoded cursor boundary map as a trailing argument; `CollectionResultDTO` carries an optional trailing `nextCursor`, preserving constructor compatibility.
+- HTTP `cursor=<token>` is normalized as an opaque bounded base64url-JSON transport token. Malformed tokens are ignored rather than treated as query errors.
+- Cursor boundaries contain all effective stable-sort fields, including identifier tie-breakers. Doctrine keyset predicates are lexicographic: each OR arm fixes prior sort fields and compares the current field using `>` for ascending and `<` for descending order.
+- Cursor application requires the token field order/shape to exactly match effective policy-approved sorts. A syntactically valid mismatched cursor falls back to normal offset pagination instead of silently resetting the offset.
+- Query execution reads `page size + 1` rows to determine continuation and emits `nextCursor` from the final returned row when another row exists.
+- Projection mode internally selects missing sort-boundary fields using `__cursor_*` aliases, then removes those aliases before returning public items; integration tests verify no internal cursor data leaks into projections.
+- Cursor emission currently accepts only non-null scalar sort-boundary values. Null ordering remains deliberately out of scope until Collectioning defines a cross-database NULLS FIRST/LAST contract.
+- A standalone `CollectionCursorDTO` prototype was rejected as unnecessary public API surface; cursor transport stays inside resolver/processor and temporary prototypes were preserved only under ignored `var/` backup paths.
+- Doctrine identifier selection was made explicit with a branch-testable loop while preserving exclusion of association identifiers and blob/binary identifiers.
+- Final gates: PHPUnit 18/18 with 88 assertions; PHPStan 0 errors; PHP-CS-Fixer 0 pending fixes; strict Composer validation/check-lock valid; Composer audit reports no security vulnerability advisories.
+- Final Canon040 coverage: lines 95.10% (233/245), methods 81.81% (18/22), branches 88.58% (256/289).

@@ -82,12 +82,51 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             ->getQuery()
             ->getSingleScalarResult();
 
+        $effectiveSorts = [];
         foreach ($query->stableSorts($definition->identifierFields) as $sort) {
-            if (isset($policy[$sort->field]) && $policy[$sort->field]->sortable) {
-                $filtered->addOrderBy('entity.'.$sort->field, 'desc' === strtolower($sort->direction) ? 'DESC' : 'ASC');
+            if (!isset($policy[$sort->field]) || !$policy[$sort->field]->sortable) {
+                continue;
+            }
+
+            $effectiveSorts[] = $sort;
+        }
+
+        $cursorFields = array_map(static fn ($sort): string => $sort->field, $effectiveSorts);
+        $cursorApplied = false;
+        if (null !== $query->cursor && array_keys($query->cursor) === $cursorFields) {
+            $cursorOr = $filtered->expr()->orX();
+            foreach ($effectiveSorts as $index => $sort) {
+                $and = $filtered->expr()->andX();
+                for ($previous = 0; $previous < $index; ++$previous) {
+                    $previousSort = $effectiveSorts[$previous];
+                    $name = 'cursor_'.$index.'_'.$previous;
+                    $and->add(sprintf('entity.%s = :%s', $previousSort->field, $name));
+                    $filtered->setParameter($name, $query->cursor[$previousSort->field]);
+                }
+
+                $name = 'cursor_'.$index;
+                $and->add(sprintf(
+                    'entity.%s %s :%s',
+                    $sort->field,
+                    'desc' === strtolower($sort->direction) ? '<' : '>',
+                    $name,
+                ));
+                $filtered->setParameter($name, $query->cursor[$sort->field]);
+                $cursorOr->add($and);
+            }
+
+            if ($cursorOr->count() > 0) {
+                $filtered->andWhere($cursorOr);
+                $cursorApplied = true;
             }
         }
 
+        foreach ($effectiveSorts as $sort) {
+            $filtered->addOrderBy('entity.'.$sort->field, 'desc' === strtolower($sort->direction) ? 'DESC' : 'ASC');
+        }
+
+        $projectionCursorAliases = [];
+        $projectionEnabled = false;
         if ([] !== $query->fields) {
             $select = [];
             foreach ($query->fields as $field) {
@@ -95,17 +134,82 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
                     $select[] = sprintf('entity.%s AS %s', $field, $field);
                 }
             }
+
+            if ([] !== $select) {
+                $projectionEnabled = true;
+                foreach ($effectiveSorts as $index => $sort) {
+                    if (in_array($sort->field, $query->fields, true)) {
+                        continue;
+                    }
+
+                    $alias = '__cursor_'.$index;
+                    $projectionCursorAliases[$sort->field] = $alias;
+                    $select[] = sprintf('entity.%s AS %s', $sort->field, $alias);
+                }
+            }
+
             $filtered->select([] !== $select ? $select : 'entity');
         } else {
             $filtered->select('entity');
         }
 
         $items = $filtered
-            ->setFirstResult($query->page->offset())
-            ->setMaxResults($query->page->size)
+            ->setFirstResult($cursorApplied ? 0 : $query->page->offset())
+            ->setMaxResults($query->page->size + 1)
             ->getQuery()
             ->getResult();
 
-        return new CollectionResultDTO(array_values($items), $total, $filteredTotal, $query->page);
+        $hasNext = count($items) > $query->page->size;
+        if ($hasNext) {
+            array_pop($items);
+        }
+
+        $nextCursor = null;
+        $lastItem = end($items);
+        if ($hasNext && false !== $lastItem && [] !== $effectiveSorts) {
+            $metadata = $manager->getClassMetadata($definition->entityClass);
+            $cursorValues = [];
+            foreach ($effectiveSorts as $sort) {
+                $value = null;
+                $hasValue = false;
+                if (is_array($lastItem)) {
+                    if (array_key_exists($sort->field, $lastItem)) {
+                        $value = $lastItem[$sort->field];
+                        $hasValue = true;
+                    } elseif (isset($projectionCursorAliases[$sort->field]) && array_key_exists($projectionCursorAliases[$sort->field], $lastItem)) {
+                        $value = $lastItem[$projectionCursorAliases[$sort->field]];
+                        $hasValue = true;
+                    }
+                } elseif (is_object($lastItem) && $metadata->hasField($sort->field)) {
+                    $value = $metadata->getFieldValue($lastItem, $sort->field);
+                    $hasValue = true;
+                }
+
+                if (!$hasValue || !(is_int($value) || is_float($value) || is_string($value) || is_bool($value))) {
+                    $cursorValues = [];
+                    break;
+                }
+
+                $cursorValues[$sort->field] = $value;
+            }
+
+            if (count($cursorValues) === count($effectiveSorts)) {
+                $nextCursor = rtrim(strtr(base64_encode(json_encode($cursorValues, JSON_THROW_ON_ERROR)), '+/', '-_'), '=');
+            }
+        }
+
+        if ($projectionEnabled && [] !== $projectionCursorAliases) {
+            foreach ($items as &$item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                foreach ($projectionCursorAliases as $alias) {
+                    unset($item[$alias]);
+                }
+            }
+            unset($item);
+        }
+
+        return new CollectionResultDTO(array_values($items), $total, $filteredTotal, $query->page, $nextCursor);
     }
 }

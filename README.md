@@ -14,4 +14,6 @@ Canonical flow:
 
 HTTP filters remain backward compatible with scalar equality syntax such as `filter[status]=active`. Typed comparison operators use nested syntax such as `filter[id][gte]=10`. Field policies whitelist supported operators; Doctrine-derived numeric fields support `eq`, `neq`, `lt`, `lte`, `gt`, and `gte`, while other filterable scalar fields default to `eq` and `neq`.
 
+Offset pagination remains the default. Results may additionally expose an opaque `nextCursor`; clients can pass that value back as `cursor=<token>` with the same filter and sort contract to continue by keyset pagination. Cursor boundaries include all effective stable-sort fields, including identifier tie-breakers. Clients must treat the token as opaque and must not depend on its encoded format. Malformed tokens are ignored during request normalization, and tokens whose field shape does not match the effective stable sort fall back to normal offset pagination. Cursor emission currently requires non-null scalar sort-boundary values; explicit cross-database null ordering is not yet part of the cursor contract.
+
 Cruding, Tabling, API endpoints and other consumers may depend on this package. Ant Design Pro Components and PrimeReact remain UI consumers rather than backend collection engines.

@@ -7,9 +7,10 @@ namespace App\Collectioning\DTO;
 final readonly class CollectionQueryDTO
 {
     /**
-     * @param list<CollectionFilterDTO> $filters
-     * @param list<CollectionSortDTO>   $sorts
-     * @param list<string>              $fields
+     * @param list<CollectionFilterDTO>                 $filters
+     * @param list<CollectionSortDTO>                   $sorts
+     * @param list<string>                              $fields
+     * @param array<string, int|float|string|bool>|null $cursor
      */
     public function __construct(
         public CollectionPageDTO $page,
@@ -17,6 +18,7 @@ final readonly class CollectionQueryDTO
         public array $filters = [],
         public array $sorts = [],
         public array $fields = [],
+        public ?array $cursor = null,
     ) {
     }
 

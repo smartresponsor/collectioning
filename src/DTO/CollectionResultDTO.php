@@ -12,6 +12,7 @@ final readonly class CollectionResultDTO
         public int $total,
         public int $filteredTotal,
         public CollectionPageDTO $page,
+        public ?string $nextCursor = null,
     ) {
     }
 
