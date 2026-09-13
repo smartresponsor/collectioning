@@ -37,7 +37,11 @@
   },
   "scripts": {
     "test": "phpunit tests",
-    "phpstan": "phpstan analyse src tests --level=8",
+    "test:coverage": [
+      "@php -r \"if (!is_dir('var/coverage')) { mkdir('var/coverage', 0777, true); }\"",
+      "@php -d xdebug.mode=coverage vendor/bin/phpunit --branch-coverage --coverage-text=var/coverage/summary.txt"
+    ],
+    "phpstan": "phpstan analyse -c phpstan.neon",
     "cs:check": "php-cs-fixer fix --dry-run --diff",
     "cs:fix": "php-cs-fixer fix"
   }

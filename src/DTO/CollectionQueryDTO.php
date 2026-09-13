@@ -19,4 +19,32 @@ final readonly class CollectionQueryDTO
         public array $fields = [],
     ) {
     }
+
+    /**
+     * Preserve requested sort precedence while appending deterministic identifier tie-breakers.
+     *
+     * @param list<string> $identifierFields
+     *
+     * @return list<CollectionSortDTO>
+     */
+    public function stableSorts(array $identifierFields): array
+    {
+        $sorts = $this->sorts;
+        $sortedFields = [];
+
+        foreach ($sorts as $sort) {
+            $sortedFields[$sort->field] = true;
+        }
+
+        foreach ($identifierFields as $identifierField) {
+            if (isset($sortedFields[$identifierField])) {
+                continue;
+            }
+
+            $sorts[] = new CollectionSortDTO($identifierField);
+            $sortedFields[$identifierField] = true;
+        }
+
+        return $sorts;
+    }
 }

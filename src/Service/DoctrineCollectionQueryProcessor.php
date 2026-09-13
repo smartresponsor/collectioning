@@ -64,7 +64,7 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             ->getQuery()
             ->getSingleScalarResult();
 
-        foreach ($query->sorts as $sort) {
+        foreach ($query->stableSorts($definition->identifierFields) as $sort) {
             if (isset($policy[$sort->field]) && $policy[$sort->field]->sortable) {
                 $filtered->addOrderBy('entity.'.$sort->field, 'desc' === strtolower($sort->direction) ? 'DESC' : 'ASC');
             }
