@@ -31,10 +31,19 @@ final readonly class CollectionQueryDTO
      */
     public function stableSorts(array $identifierFields): array
     {
-        $sorts = $this->sorts;
+        $sorts = [];
         $sortedFields = [];
 
-        foreach ($sorts as $sort) {
+        foreach ($this->sorts as $sort) {
+            $direction = strtolower($sort->direction);
+            if (!in_array($direction, ['asc', 'desc'], true)) {
+                continue;
+            }
+            if (isset($sortedFields[$sort->field])) {
+                continue;
+            }
+
+            $sorts[] = new CollectionSortDTO($sort->field, $direction);
             $sortedFields[$sort->field] = true;
         }
 

@@ -47,4 +47,27 @@ final class CollectionQueryDTOTest extends TestCase
         self::assertSame('desc', $sorts[0]->direction);
         self::assertSame('name', $sorts[1]->field);
     }
+
+    public function testStableSortsCanonicalizeDirectionsAndIgnoreDuplicateFields(): void
+    {
+        $query = new CollectionQueryDTO(
+            new CollectionPageDTO(),
+            sorts: [
+                new CollectionSortDTO('name', 'DESC'),
+                new CollectionSortDTO('name', 'asc'),
+                new CollectionSortDTO('id', 'sideways'),
+            ],
+        );
+
+        $sorts = $query->stableSorts(['id']);
+
+        self::assertSame(['name', 'id'], array_map(
+            static fn (CollectionSortDTO $sort): string => $sort->field,
+            $sorts,
+        ));
+        self::assertSame(['desc', 'asc'], array_map(
+            static fn (CollectionSortDTO $sort): string => $sort->direction,
+            $sorts,
+        ));
+    }
 }
