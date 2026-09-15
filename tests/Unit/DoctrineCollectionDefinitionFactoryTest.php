@@ -44,11 +44,14 @@ final class DoctrineCollectionDefinitionFactoryTest extends TestCase
         self::assertFalse($definition->fields[0]->searchable);
         self::assertTrue($definition->fields[0]->filterable);
         self::assertTrue($definition->fields[0]->sortable);
+        self::assertTrue($definition->fields[0]->facetable);
         self::assertSame(['eq', 'neq', 'lt', 'lte', 'gt', 'gte'], $definition->fields[0]->filterOperators);
         self::assertTrue($definition->fields[1]->searchable);
+        self::assertTrue($definition->fields[1]->facetable);
         self::assertSame(['eq', 'neq'], $definition->fields[1]->filterOperators);
         self::assertFalse($definition->fields[2]->filterable);
         self::assertFalse($definition->fields[2]->sortable);
+        self::assertFalse($definition->fields[2]->facetable);
     }
 
     public function testCreateRejectsEntityWithoutDoctrineOrmManager(): void

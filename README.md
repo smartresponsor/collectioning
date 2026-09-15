@@ -4,7 +4,7 @@ Collectioning is the platform-wide Symfony primitive for querying collections. I
 
 ## Responsibility
 
-Collectioning owns pagination, global search, field filters, stable sorting, projection, total/filtered counts, provider-neutral result contracts, HTTP query normalization, and realtime collection invalidation contracts.
+Collectioning owns pagination, global search, field filters, stable sorting, projection, total/filtered counts, facet aggregation, provider-neutral result contracts, HTTP query normalization, and realtime collection invalidation contracts.
 
 The component does not own HTML, tables, CRUD forms, entity mutations, navigation menus, or a JavaScript data-grid implementation.
 
@@ -21,5 +21,7 @@ Stable sorting is canonicalized before planning and execution. Sort directions a
 `CollectionResultDTO` also exposes provider-neutral diagnostics for the effective query plan: whether search was applied, searchable fields used, applied filter field/operator pairs, effective stable sorts, pagination mode, and public projection fields. Diagnostics never include SQL/DQL, search text, filter values, cursor contents, or bound parameter values. Consumers should treat diagnostics as observability metadata rather than executable query instructions. Diagnostics also include aggregate execution metrics (`durationMs`, `queryCount`, `returnedItems`, `total`, `filteredTotal`) derived from monotonic timing and actual Doctrine executions; these are observational values, not SLO thresholds.
 
 `CollectionQueryPlannerInterface` is the provider-neutral normalization boundary. It resolves the effective searchable fields, canonical filter operators, stable sorts, projection, and cursor eligibility once. Execution providers such as Doctrine consume `CollectionQueryPlanDTO` and remain responsible only for translating that plan into provider-specific query primitives and executing it. A second backend is not bundled merely to demonstrate abstraction; future providers should implement the existing processor contract while reusing the shared planner semantics.
+
+Faceted navigation is exposed through `CollectionFacetProcessorInterface`. A `CollectionFacetDTO` requests one policy-approved facet field, bucket limit, optional missing-value count, and whether that facet should exclude its own active filter when computing alternatives. `DoctrineCollectionFacetProcessor` reuses the canonical query planner for current search/filter semantics, rejects non-facetable fields, groups scalar buckets by count, and never applies pagination/projection state to facet counts. Facet execution is separate from table presentation so Tabling and non-table consumers can share the same aggregation semantics.
 
 Cruding, Tabling, API endpoints and other consumers may depend on this package. Ant Design Pro Components and PrimeReact remain UI consumers rather than backend collection engines.

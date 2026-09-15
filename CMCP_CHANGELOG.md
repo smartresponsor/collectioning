@@ -160,3 +160,13 @@
 - Added focused regression coverage and documented the canonical behavior in README.
 - Verification after the patch: PHPUnit 24/24 with 133 assertions; PHPStan level 8 passes; PHP-CS-Fixer dry-run reports 0 fixable files; changed-file PHP lint passes; strict Composer validation had already passed in the same run. Coverage execution also passes: lines 96.40% (295/306), branches 89.50% (290/324), methods 76.00% (19/25), classes 62.50% (10/16).
 - Growth remains separate: explicit cross-database null ordering, optional versioned/signed opaque cursors, and broader operators/aggregations only with provider-neutral policy and parity.
+
+## Growth continuation — facet aggregation
+
+- Added explicit provider-neutral facet contracts: `CollectionFacetDTO`, `CollectionFacetBucketDTO`, `CollectionFacetResultDTO`, and `CollectionFacetProcessorInterface`.
+- Extended `CollectionFieldPolicyDTO` with trailing backward-compatible `facetable` capability. Doctrine definition derivation enables facets only for bounded/scalar-friendly field types and keeps text/blob/binary fields non-facetable by default.
+- Added `DoctrineCollectionFacetProcessor`, reusing the canonical `CollectionQueryPlannerInterface` for current search/filter semantics. Facet aggregation ignores pagination/projection state, rejects fields not marked facetable, bounds bucket counts to 100, and supports optional missing-value counts.
+- Facet requests default to excluding the facet field's own active filter, which supports standard faceted-navigation alternative counts while preserving all other active search/filter constraints. Callers may opt back into own-filter inclusion per facet.
+- Symfony DI now binds `CollectionFacetProcessorInterface`; extension and Doctrine-definition tests cover the new contract.
+- Added SQLite/Doctrine integration coverage for search/filter composition, own-filter exclusion, own-filter inclusion, missing counts, facet policy rejection, and bucket limits.
+- Final gates: PHPUnit 27/27 with 158 assertions, PHPStan level 8 zero errors, PHP-CS-Fixer zero pending fixes. Coverage: lines 94.72% (359/379), methods 75.00% (24/32), branches 88.14% (342/388).

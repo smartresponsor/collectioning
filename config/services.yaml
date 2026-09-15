@@ -13,6 +13,7 @@ services:
         resource: '../src/Service/'
 
     App\Collectioning\ServiceInterface\CollectionDefinitionFactoryInterface: '@App\Collectioning\Factory\DoctrineCollectionDefinitionFactory'
+    App\Collectioning\ServiceInterface\CollectionFacetProcessorInterface: '@App\Collectioning\Service\DoctrineCollectionFacetProcessor'
     App\Collectioning\ServiceInterface\CollectionQueryPlannerInterface: '@App\Collectioning\Service\CollectionQueryPlanner'
     App\Collectioning\ServiceInterface\CollectionQueryProcessorInterface: '@App\Collectioning\Service\DoctrineCollectionQueryProcessor'
     App\Collectioning\ServiceInterface\CollectionQueryRequestResolverInterface: '@App\Collectioning\Resolver\CollectionQueryRequestResolver'

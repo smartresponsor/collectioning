@@ -14,6 +14,7 @@ final readonly class CollectionFieldPolicyDTO
         public bool $sortable = false,
         public bool $projectable = true,
         public array $filterOperators = ['eq'],
+        public bool $facetable = false,
     ) {
     }
 }
