@@ -102,4 +102,20 @@ final class CollectionScopedReaderTest extends TestCase
 
         new CollectionDataScopeDTO(CollectionDataScopeDTO::SELECTED);
     }
+
+    public function testDataScopeRejectsUnsupportedMode(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unsupported collection data scope "everything".');
+
+        new CollectionDataScopeDTO('everything');
+    }
+
+    public function testDataScopeDefaultsToFilteredModeWithoutSelectionFilters(): void
+    {
+        $scope = new CollectionDataScopeDTO();
+
+        self::assertSame(CollectionDataScopeDTO::FILTERED, $scope->mode);
+        self::assertSame([], $scope->selectionFilters);
+    }
 }

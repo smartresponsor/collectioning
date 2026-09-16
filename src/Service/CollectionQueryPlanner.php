@@ -11,13 +11,24 @@ use App\Collectioning\ServiceInterface\CollectionQueryPlannerInterface;
 
 final readonly class CollectionQueryPlanner implements CollectionQueryPlannerInterface
 {
-    private const array SUPPORTED_FILTER_OPERATORS = ['eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'in', 'notIn'];
+    private const array SUPPORTED_FILTER_OPERATORS = [
+        'eq' => true,
+        'neq' => true,
+        'lt' => true,
+        'lte' => true,
+        'gt' => true,
+        'gte' => true,
+        'in' => true,
+        'notIn' => true,
+    ];
 
     public function plan(CollectionDefinitionDTO $definition, CollectionQueryDTO $query): CollectionQueryPlanDTO
     {
         $policy = [];
+        $filterOperatorPolicy = [];
         foreach ($definition->fields as $field) {
             $policy[$field->field] = $field;
+            $filterOperatorPolicy[$field->field] = array_fill_keys($field->filterOperators, true);
         }
 
         $searchFields = [];
@@ -37,13 +48,13 @@ final readonly class CollectionQueryPlanner implements CollectionQueryPlannerInt
             if (!$policy[$filter->field]->filterable) {
                 continue;
             }
-            if (!in_array($filter->operator, self::SUPPORTED_FILTER_OPERATORS, true)) {
+            if (!isset(self::SUPPORTED_FILTER_OPERATORS[$filter->operator])) {
                 continue;
             }
-            if (!in_array($filter->operator, $policy[$filter->field]->filterOperators, true)) {
+            if (!isset($filterOperatorPolicy[$filter->field][$filter->operator])) {
                 continue;
             }
-            if (in_array($filter->operator, ['in', 'notIn'], true)) {
+            if ('in' === $filter->operator || 'notIn' === $filter->operator) {
                 if (!is_array($filter->value) || !array_is_list($filter->value) || [] === $filter->value || count(array_filter($filter->value, 'is_scalar')) !== count($filter->value)) {
                     continue;
                 }
