@@ -170,3 +170,13 @@
 - Symfony DI now binds `CollectionFacetProcessorInterface`; extension and Doctrine-definition tests cover the new contract.
 - Added SQLite/Doctrine integration coverage for search/filter composition, own-filter exclusion, own-filter inclusion, missing counts, facet policy rejection, and bucket limits.
 - Final gates: PHPUnit 27/27 with 158 assertions, PHPStan level 8 zero errors, PHP-CS-Fixer zero pending fixes. Coverage: lines 94.72% (359/379), methods 75.00% (24/32), branches 88.14% (342/388).
+
+## Growth continuation — general aggregation and grouping
+
+- Added provider-neutral `CollectionAggregationDTO`, `CollectionAggregationRowDTO`, `CollectionAggregationResultDTO`, and `CollectionAggregationProcessorInterface` contracts.
+- Extended `CollectionFieldPolicyDTO` with trailing backward-compatible `aggregateFunctions`; Doctrine metadata derives `count` for all scalar fields, `min`/`max` for non-text/non-binary fields, and `sum`/`avg` for numeric fields.
+- Added `DoctrineCollectionAggregationProcessor` for `count`, `sum`, `avg`, `min`, and `max`, reusing the canonical query planner for search/filter semantics while deliberately ignoring page/projection state.
+- Optional grouping is restricted to facetable fields and duplicate/disallowed group dimensions are removed. Grouped responses are capped at 500 rows with one sentinel row used to set `CollectionAggregationResultDTO::truncated`, avoiding silent unbounded response growth.
+- Aggregate names never become DQL aliases directly; internal aliases are generated, and field/function execution is constrained by fixed functions plus field policy allowlists.
+- Added SQLite/Doctrine integration coverage for filtered global summaries, grouped summaries, policy rejection, and empty effective aggregation requests; extension/factory coverage now includes aggregation service and derived function policies.
+- Final gates: PHPUnit 30/30 with 181 assertions, PHPStan level 8 zero errors, PHP-CS-Fixer zero pending fixes, strict Composer validation/check-lock valid, Composer audit clean, and changed-file PHP lint green. Coverage: lines 93.54% (449/480), methods 74.35% (29/39), branches 87.54% (450/514).

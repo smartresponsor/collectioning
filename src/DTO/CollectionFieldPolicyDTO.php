@@ -6,7 +6,10 @@ namespace App\Collectioning\DTO;
 
 final readonly class CollectionFieldPolicyDTO
 {
-    /** @param list<string> $filterOperators */
+    /**
+     * @param list<string> $filterOperators
+     * @param list<string> $aggregateFunctions
+     */
     public function __construct(
         public string $field,
         public bool $searchable = false,
@@ -15,6 +18,7 @@ final readonly class CollectionFieldPolicyDTO
         public bool $projectable = true,
         public array $filterOperators = ['eq'],
         public bool $facetable = false,
+        public array $aggregateFunctions = [],
     ) {
     }
 }

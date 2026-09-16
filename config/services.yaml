@@ -12,6 +12,7 @@ services:
     App\Collectioning\Service\:
         resource: '../src/Service/'
 
+    App\Collectioning\ServiceInterface\CollectionAggregationProcessorInterface: '@App\Collectioning\Service\DoctrineCollectionAggregationProcessor'
     App\Collectioning\ServiceInterface\CollectionDefinitionFactoryInterface: '@App\Collectioning\Factory\DoctrineCollectionDefinitionFactory'
     App\Collectioning\ServiceInterface\CollectionFacetProcessorInterface: '@App\Collectioning\Service\DoctrineCollectionFacetProcessor'
     App\Collectioning\ServiceInterface\CollectionQueryPlannerInterface: '@App\Collectioning\Service\CollectionQueryPlanner'
