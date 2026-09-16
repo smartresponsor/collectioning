@@ -70,4 +70,11 @@ final class CollectionQueryDTOTest extends TestCase
             $sorts,
         ));
     }
+
+    public function testStableSortsAllowEmptyRequestedAndIdentifierSorts(): void
+    {
+        $query = new CollectionQueryDTO(new CollectionPageDTO());
+
+        self::assertSame([], $query->stableSorts([]));
+    }
 }

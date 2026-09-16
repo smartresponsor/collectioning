@@ -36,7 +36,7 @@ final readonly class CollectionQueryDTO
 
         foreach ($this->sorts as $sort) {
             $direction = strtolower($sort->direction);
-            if (!in_array($direction, ['asc', 'desc'], true)) {
+            if ('asc' !== $direction && 'desc' !== $direction) {
                 continue;
             }
             if (isset($sortedFields[$sort->field])) {

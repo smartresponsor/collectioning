@@ -10,12 +10,18 @@ final readonly class CollectionDataScopeDTO
     public const string FILTERED = 'filtered';
     public const string SELECTED = 'selected';
 
+    private const array SUPPORTED_MODES = [
+        self::CURRENT_PAGE => true,
+        self::FILTERED => true,
+        self::SELECTED => true,
+    ];
+
     /** @param list<CollectionFilterDTO> $selectionFilters */
     public function __construct(
         public string $mode = self::FILTERED,
         public array $selectionFilters = [],
     ) {
-        if (!in_array($mode, [self::CURRENT_PAGE, self::FILTERED, self::SELECTED], true)) {
+        if (!isset(self::SUPPORTED_MODES[$mode])) {
             throw new \InvalidArgumentException(sprintf('Unsupported collection data scope "%s".', $mode));
         }
         if (self::SELECTED === $mode && [] === $selectionFilters) {
