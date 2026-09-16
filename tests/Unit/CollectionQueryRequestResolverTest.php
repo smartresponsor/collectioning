@@ -55,4 +55,26 @@ final class CollectionQueryRequestResolverTest extends TestCase
         self::assertNotNull($query->cursor);
         self::assertSame(['name' => 'Acme', 'id' => 10], $query->cursor);
     }
+
+    public function testResolvesMembershipOperatorsOnlyForScalarLists(): void
+    {
+        $definition = new CollectionDefinitionDTO(\stdClass::class, [
+            new CollectionFieldPolicyDTO('id', false, true, true, true, ['eq', 'in', 'notIn']),
+        ]);
+        $request = Request::create('/items', 'GET', [
+            'filter' => [
+                'id' => [
+                    'in' => [1, 2, 3],
+                    'notIn' => [],
+                    'eq' => ['invalid'],
+                ],
+            ],
+        ]);
+
+        $query = (new CollectionQueryRequestResolver())->resolve($request, $definition);
+
+        self::assertCount(1, $query->filters);
+        self::assertSame('in', $query->filters[0]->operator);
+        self::assertSame([1, 2, 3], $query->filters[0]->value);
+    }
 }

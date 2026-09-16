@@ -40,7 +40,18 @@ final readonly class CollectionQueryRequestResolver implements CollectionQueryRe
             }
 
             foreach ($value as $operator => $operand) {
-                if (is_string($operator) && in_array($operator, $fieldPolicy->filterOperators, true) && !is_array($operand)) {
+                if (!is_string($operator) || !in_array($operator, $fieldPolicy->filterOperators, true)) {
+                    continue;
+                }
+
+                if (in_array($operator, ['in', 'notIn'], true)) {
+                    if (is_array($operand) && array_is_list($operand) && [] !== $operand && count(array_filter($operand, 'is_scalar')) === count($operand)) {
+                        $filters[] = new CollectionFilterDTO($field, $operator, $operand);
+                    }
+                    continue;
+                }
+
+                if (!is_array($operand)) {
                     $filters[] = new CollectionFilterDTO($field, $operator, $operand);
                 }
             }

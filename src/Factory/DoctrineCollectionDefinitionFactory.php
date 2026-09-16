@@ -31,7 +31,7 @@ final readonly class DoctrineCollectionDefinitionFactory implements CollectionDe
             $filterable = in_array($type, ['string', 'text', 'ascii_string', 'integer', 'smallint', 'bigint', 'decimal', 'float', 'boolean', 'guid', 'uuid', 'ulid'], true);
             $sortable = !in_array($type, ['blob', 'binary'], true);
             $facetable = in_array($type, ['string', 'ascii_string', 'integer', 'smallint', 'bigint', 'decimal', 'float', 'boolean', 'guid', 'uuid', 'ulid'], true);
-            $filterOperators = ['eq', 'neq'];
+            $filterOperators = ['eq', 'neq', 'in', 'notIn'];
             $aggregateFunctions = ['count'];
             if (!in_array($type, ['blob', 'binary', 'text'], true)) {
                 $aggregateFunctions = [...$aggregateFunctions, 'min', 'max'];

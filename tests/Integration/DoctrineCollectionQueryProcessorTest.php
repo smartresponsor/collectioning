@@ -161,6 +161,30 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
         self::assertSame(2, $result->items[0]->id);
     }
 
+    public function testProcessAppliesMembershipOperators(): void
+    {
+        $query = new CollectionQueryDTO(
+            page: new CollectionPageDTO(1, 10),
+            filters: [
+                new CollectionFilterDTO('id', 'in', [1, 3]),
+                new CollectionFilterDTO('status', 'notIn', ['inactive']),
+            ],
+        );
+
+        $result = $this->processor()->process($this->definition(), $query);
+
+        self::assertSame(2, $result->filteredTotal);
+        self::assertCount(2, $result->items);
+        self::assertInstanceOf(CollectioningProcessorFixture::class, $result->items[0]);
+        self::assertInstanceOf(CollectioningProcessorFixture::class, $result->items[1]);
+        self::assertSame(1, $result->items[0]->id);
+        self::assertSame(3, $result->items[1]->id);
+        self::assertSame([
+            ['field' => 'id', 'operator' => 'in'],
+            ['field' => 'status', 'operator' => 'notIn'],
+        ], $result->diagnostics['filters']);
+    }
+
     public function testProcessIgnoresUnknownExecutorOperatorEvenWhenPolicyListsIt(): void
     {
         $definition = new CollectionDefinitionDTO(CollectioningProcessorFixture::class, [
@@ -190,9 +214,9 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
     private function definition(): CollectionDefinitionDTO
     {
         return new CollectionDefinitionDTO(CollectioningProcessorFixture::class, [
-            new CollectionFieldPolicyDTO('id', false, true, true, true, ['eq', 'neq', 'lt', 'lte', 'gt', 'gte']),
-            new CollectionFieldPolicyDTO('name', true, true, true, true, ['eq', 'neq']),
-            new CollectionFieldPolicyDTO('status', false, true, true, true, ['eq', 'neq']),
+            new CollectionFieldPolicyDTO('id', false, true, true, true, ['eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'in', 'notIn']),
+            new CollectionFieldPolicyDTO('name', true, true, true, true, ['eq', 'neq', 'in', 'notIn']),
+            new CollectionFieldPolicyDTO('status', false, true, true, true, ['eq', 'neq', 'in', 'notIn']),
         ], identifierFields: ['id']);
     }
 }

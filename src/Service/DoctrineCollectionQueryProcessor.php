@@ -60,6 +60,8 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
                 'lte' => '<=',
                 'gt' => '>',
                 'gte' => '>=',
+                'in' => 'IN',
+                'notIn' => 'NOT IN',
                 default => null,
             };
             if (null === $operator) {
@@ -68,7 +70,12 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
 
             $effectiveFilters[] = ['field' => $filter->field, 'operator' => $filter->operator];
             $name = 'filter_'.$parameter++;
-            $filtered->andWhere(sprintf('entity.%s %s :%s', $filter->field, $operator, $name));
+            $filtered->andWhere(sprintf(
+                in_array($filter->operator, ['in', 'notIn'], true) ? 'entity.%s %s (:%s)' : 'entity.%s %s :%s',
+                $filter->field,
+                $operator,
+                $name,
+            ));
             $filtered->setParameter($name, $filter->value);
         }
 
