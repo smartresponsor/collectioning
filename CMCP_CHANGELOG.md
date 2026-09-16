@@ -180,3 +180,13 @@
 - Aggregate names never become DQL aliases directly; internal aliases are generated, and field/function execution is constrained by fixed functions plus field policy allowlists.
 - Added SQLite/Doctrine integration coverage for filtered global summaries, grouped summaries, policy rejection, and empty effective aggregation requests; extension/factory coverage now includes aggregation service and derived function policies.
 - Final gates: PHPUnit 30/30 with 181 assertions, PHPStan level 8 zero errors, PHP-CS-Fixer zero pending fixes, strict Composer validation/check-lock valid, Composer audit clean, and changed-file PHP lint green. Coverage: lines 93.54% (449/480), methods 74.35% (29/39), branches 87.54% (450/514).
+
+## Growth continuation — scoped reads and membership filters
+
+- Added canonical `in` / `notIn` membership operators to the shared query planner and Doctrine-derived field policies. HTTP normalization accepts only non-empty scalar lists, and programmatic DTO planning rejects malformed membership lists or array-valued scalar operators.
+- Doctrine collection, facet, and aggregation processors now execute membership predicates with bound list parameters, preserving one canonical filter language across rows, facets, and summaries.
+- Added `CollectionDataScopeDTO` with explicit `currentPage`, `filtered`, and `selected` modes plus `CollectionScopedReaderInterface` / `CollectionScopedReader`.
+- Filtered and selected scoped reads restart from page one, preserve canonical search/filter/sort/projection state, clear visible-grid cursor state, and iterate bounded `maxPageSize` pages while yielding incrementally. Selected scope appends explicit policy-validated selection filters, normally identifier `in` filters.
+- Current-page scope preserves the original query exactly. Selected scope fails closed when no selection filter is supplied. Snapshot consistency across multiple page executions remains the caller/provider transaction responsibility rather than being implied by Collectioning.
+- Added unit/integration coverage for membership request normalization, planner validation, Doctrine row execution, facet/aggregation consistency, current-page/filtered/selected scoped reads, and Symfony DI registration.
+- Final gates: PHPUnit 39/39 with 223 assertions, PHPStan level 8 zero errors, PHP-CS-Fixer zero pending fixes, strict Composer validation/check-lock valid, Composer audit clean, and changed-file PHP lint green. Coverage: lines 93.71% (507/541), methods 73.80% (31/42), branches 87.87% (522/594).

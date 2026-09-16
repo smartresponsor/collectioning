@@ -11,7 +11,7 @@ use App\Collectioning\ServiceInterface\CollectionQueryPlannerInterface;
 
 final readonly class CollectionQueryPlanner implements CollectionQueryPlannerInterface
 {
-    private const array SUPPORTED_FILTER_OPERATORS = ['eq', 'neq', 'lt', 'lte', 'gt', 'gte'];
+    private const array SUPPORTED_FILTER_OPERATORS = ['eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'in', 'notIn'];
 
     public function plan(CollectionDefinitionDTO $definition, CollectionQueryDTO $query): CollectionQueryPlanDTO
     {
@@ -41,6 +41,13 @@ final readonly class CollectionQueryPlanner implements CollectionQueryPlannerInt
                 continue;
             }
             if (!in_array($filter->operator, $policy[$filter->field]->filterOperators, true)) {
+                continue;
+            }
+            if (in_array($filter->operator, ['in', 'notIn'], true)) {
+                if (!is_array($filter->value) || !array_is_list($filter->value) || [] === $filter->value || count(array_filter($filter->value, 'is_scalar')) !== count($filter->value)) {
+                    continue;
+                }
+            } elseif (is_array($filter->value)) {
                 continue;
             }
 

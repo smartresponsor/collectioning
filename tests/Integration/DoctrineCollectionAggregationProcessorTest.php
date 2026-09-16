@@ -87,6 +87,28 @@ final class DoctrineCollectionAggregationProcessorTest extends TestCase
         self::assertSame('70', (string) $result->rows[1]->values['sumAmount']);
     }
 
+    public function testAggregationRespectsMembershipFilters(): void
+    {
+        $definition = new CollectionDefinitionDTO(CollectioningAggregationFixture::class, [
+            new CollectionFieldPolicyDTO('id', filterable: true, sortable: true, facetable: true, aggregateFunctions: ['count', 'min', 'max', 'sum', 'avg']),
+            new CollectionFieldPolicyDTO('region', filterable: true, sortable: true, filterOperators: ['eq', 'notIn'], facetable: true, aggregateFunctions: ['count', 'min', 'max']),
+            new CollectionFieldPolicyDTO('amount', filterable: true, sortable: true, facetable: true, aggregateFunctions: ['count', 'min', 'max', 'sum', 'avg']),
+        ], identifierFields: ['id']);
+        $query = new CollectionQueryDTO(
+            new CollectionPageDTO(1, 1),
+            filters: [new CollectionFilterDTO('region', 'notIn', ['south'])],
+        );
+
+        $result = $this->processor()->process($definition, $query, [
+            new CollectionAggregationDTO('rows', 'count'),
+            new CollectionAggregationDTO('sumAmount', 'sum', 'amount'),
+        ]);
+
+        self::assertCount(1, $result->rows);
+        self::assertSame('2', (string) $result->rows[0]->values['rows']);
+        self::assertSame('30', (string) $result->rows[0]->values['sumAmount']);
+    }
+
     public function testReturnsEmptyResultWhenNoAggregationSurvivesPolicy(): void
     {
         $result = $this->processor()->process($this->definition(), new CollectionQueryDTO(new CollectionPageDTO(1, 25)), [

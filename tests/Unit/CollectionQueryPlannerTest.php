@@ -61,6 +61,25 @@ final class CollectionQueryPlannerTest extends TestCase
         self::assertSame('cursor', $plan->paginationMode());
     }
 
+    public function testNormalizesMembershipFilterShapes(): void
+    {
+        $definition = new CollectionDefinitionDTO(\stdClass::class, [
+            new CollectionFieldPolicyDTO('id', false, true, true, true, ['eq', 'in', 'notIn']),
+        ]);
+        $plan = (new CollectionQueryPlanner())->plan($definition, new CollectionQueryDTO(
+            new CollectionPageDTO(),
+            filters: [
+                new CollectionFilterDTO('id', 'in', [1, 2]),
+                new CollectionFilterDTO('id', 'notIn', []),
+                new CollectionFilterDTO('id', 'eq', [1]),
+            ],
+        ));
+
+        self::assertCount(1, $plan->filters);
+        self::assertSame('in', $plan->filters[0]->operator);
+        self::assertSame([1, 2], $plan->filters[0]->value);
+    }
+
     public function testCursorIsNotApplicableWhenShapeDoesNotMatchEffectiveSorts(): void
     {
         $definition = new CollectionDefinitionDTO(\stdClass::class, [

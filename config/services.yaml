@@ -19,4 +19,5 @@ services:
     App\Collectioning\ServiceInterface\CollectionQueryProcessorInterface: '@App\Collectioning\Service\DoctrineCollectionQueryProcessor'
     App\Collectioning\ServiceInterface\CollectionQueryRequestResolverInterface: '@App\Collectioning\Resolver\CollectionQueryRequestResolver'
     App\Collectioning\ServiceInterface\CollectionRequestReaderInterface: '@App\Collectioning\Service\CollectionRequestReader'
+    App\Collectioning\ServiceInterface\CollectionScopedReaderInterface: '@App\Collectioning\Service\CollectionScopedReader'
     App\Collectioning\ServiceInterface\CollectionRealtimePublisherInterface: '@App\Collectioning\Service\MercureCollectionRealtimePublisher'

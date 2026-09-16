@@ -166,13 +166,20 @@ final readonly class DoctrineCollectionAggregationProcessor implements Collectio
                 'lte' => '<=',
                 'gt' => '>',
                 'gte' => '>=',
+                'in' => 'IN',
+                'notIn' => 'NOT IN',
                 default => null,
             };
             if (null === $operator) {
                 continue;
             }
             $name = 'aggregation_filter_'.$index;
-            $builder->andWhere(sprintf('entity.%s %s :%s', $filter->field, $operator, $name));
+            $builder->andWhere(sprintf(
+                in_array($filter->operator, ['in', 'notIn'], true) ? 'entity.%s %s (:%s)' : 'entity.%s %s :%s',
+                $filter->field,
+                $operator,
+                $name,
+            ));
             $builder->setParameter($name, $filter->value);
         }
     }

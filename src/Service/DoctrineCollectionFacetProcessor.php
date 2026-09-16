@@ -124,6 +124,8 @@ final readonly class DoctrineCollectionFacetProcessor implements CollectionFacet
                 'lte' => '<=',
                 'gt' => '>',
                 'gte' => '>=',
+                'in' => 'IN',
+                'notIn' => 'NOT IN',
                 default => null,
             };
             if (null === $operator) {
@@ -131,7 +133,12 @@ final readonly class DoctrineCollectionFacetProcessor implements CollectionFacet
             }
 
             $name = 'facet_filter_'.$parameter++;
-            $builder->andWhere(sprintf('entity.%s %s :%s', $filter->field, $operator, $name));
+            $builder->andWhere(sprintf(
+                in_array($filter->operator, ['in', 'notIn'], true) ? 'entity.%s %s (:%s)' : 'entity.%s %s :%s',
+                $filter->field,
+                $operator,
+                $name,
+            ));
             $builder->setParameter($name, $filter->value);
         }
     }

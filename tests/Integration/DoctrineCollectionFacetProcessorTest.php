@@ -107,6 +107,28 @@ final class DoctrineCollectionFacetProcessorTest extends TestCase
         self::assertSame(1, $results[0]->missingCount);
     }
 
+    public function testFacetRespectsMembershipFilters(): void
+    {
+        $definition = new CollectionDefinitionDTO(CollectioningFacetFixture::class, [
+            new CollectionFieldPolicyDTO('id', filterable: true, sortable: true, facetable: true),
+            new CollectionFieldPolicyDTO('status', filterable: true, sortable: true, facetable: true),
+            new CollectionFieldPolicyDTO('region', filterable: true, sortable: true, filterOperators: ['eq', 'in'], facetable: true),
+        ], identifierFields: ['id']);
+        $query = new CollectionQueryDTO(
+            new CollectionPageDTO(1, 10),
+            filters: [new CollectionFilterDTO('region', 'in', ['north'])],
+        );
+
+        $results = $this->processor()->process($definition, $query, [new CollectionFacetDTO('status')]);
+
+        self::assertCount(1, $results);
+        self::assertCount(2, $results[0]->buckets);
+        self::assertSame('active', $results[0]->buckets[0]->value);
+        self::assertSame(1, $results[0]->buckets[0]->count);
+        self::assertSame('inactive', $results[0]->buckets[1]->value);
+        self::assertSame(1, $results[0]->buckets[1]->count);
+    }
+
     private function processor(): DoctrineCollectionFacetProcessor
     {
         $registry = $this->createStub(ManagerRegistry::class);
