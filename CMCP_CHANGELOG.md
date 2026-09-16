@@ -204,3 +204,7 @@
 - Added focused regression coverage for empty stable sorts, invalid/default data scopes, and malformed membership-filter shapes. Final PHPUnit: 43/43 tests, 229 assertions.
 - Final Canon040 evidence: lines 93.92% (510/543), methods 80.95% (34/42), branches 88.67% (517/583). All three independent canonical thresholds now pass; `CollectionQueryPlanner` itself is 100% methods/branches/lines.
 - Final quality gates: PHPUnit green, PHPStan level 8 zero errors, PHP-CS-Fixer zero pending fixes, strict Composer validation/check-lock valid, and Composer audit reports no security vulnerability advisories.
+
+### Post-merge release-readiness normalization
+
+- Post-merge validation on Windows exposed PHP-CS-Fixer-only line-ending churn in previously merged PHP files. `cs:fix` produced no semantic/textual Git diff for those files after staging; the only persistent repository change is `.gitattributes`, which pins PHP and Symfony YAML files to LF so future Windows and Unix checkouts exercise the same CS surface.
