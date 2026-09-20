@@ -130,6 +130,34 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
         self::assertSame(['name'], $second->diagnostics['projection']);
     }
 
+    public function testProcessEmitsCursorWhenRequestedProjectionContainsNonProjectableSortField(): void
+    {
+        $definition = new CollectionDefinitionDTO(CollectioningProcessorFixture::class, [
+            new CollectionFieldPolicyDTO('id', false, true, true, true, ['eq']),
+            new CollectionFieldPolicyDTO('name', true, true, true, true, ['eq']),
+            new CollectionFieldPolicyDTO('status', false, true, true, false, ['eq']),
+        ], identifierFields: ['id']);
+        $query = new CollectionQueryDTO(
+            page: new CollectionPageDTO(1, 1),
+            sorts: [new CollectionSortDTO('status', 'asc')],
+            fields: ['name', 'status'],
+        );
+
+        $result = $this->processor()->process($definition, $query);
+
+        self::assertSame([['name' => 'Alpha']], $result->items);
+        self::assertSame(['name'], $result->diagnostics['projection']);
+        self::assertNotNull($result->nextCursor);
+
+        $padding = (4 - strlen($result->nextCursor) % 4) % 4;
+        $decoded = base64_decode(strtr($result->nextCursor.str_repeat('=', $padding), '-_', '+/'), true);
+        self::assertNotFalse($decoded);
+        self::assertSame(
+            ['status' => 'active', 'id' => 1],
+            json_decode($decoded, true, 16, JSON_THROW_ON_ERROR),
+        );
+    }
+
     public function testProcessFallsBackToOffsetWhenCursorShapeDoesNotMatchSorts(): void
     {
         $result = $this->processor()->process($this->definition(), new CollectionQueryDTO(

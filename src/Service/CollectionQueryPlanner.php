@@ -78,6 +78,7 @@ final readonly class CollectionQueryPlanner implements CollectionQueryPlannerInt
         }
 
         $projection = [];
+        $projectedFields = [];
         foreach ($query->fields as $field) {
             if (!isset($policy[$field])) {
                 continue;
@@ -85,8 +86,12 @@ final readonly class CollectionQueryPlanner implements CollectionQueryPlannerInt
             if (!$policy[$field]->projectable) {
                 continue;
             }
+            if (isset($projectedFields[$field])) {
+                continue;
+            }
 
             $projection[] = $field;
+            $projectedFields[$field] = true;
         }
 
         $cursorApplicable = false;

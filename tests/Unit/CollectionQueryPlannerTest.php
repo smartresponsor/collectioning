@@ -38,7 +38,7 @@ final class CollectionQueryPlannerTest extends TestCase
                 new CollectionSortDTO('secret', 'asc'),
                 new CollectionSortDTO('missing', 'asc'),
             ],
-            fields: ['name', 'secret', 'missing'],
+            fields: ['name', 'name', 'secret', 'missing'],
             cursor: ['name' => 'Acme', 'id' => 10],
         );
 

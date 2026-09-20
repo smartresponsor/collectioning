@@ -133,7 +133,7 @@ final readonly class DoctrineCollectionQueryProcessor implements CollectionQuery
             if ([] !== $select) {
                 $projectionEnabled = true;
                 foreach ($effectiveSorts as $index => $sort) {
-                    if (in_array($sort->field, $query->fields, true)) {
+                    if (in_array($sort->field, $effectiveProjection, true)) {
                         continue;
                     }
 
