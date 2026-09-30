@@ -77,4 +77,61 @@ final class CollectionQueryRequestResolverTest extends TestCase
         self::assertSame('in', $query->filters[0]->operator);
         self::assertSame([1, 2, 3], $query->filters[0]->value);
     }
+
+    public function testRejectsMalformedFilterAndCursorShapesAndKeepsValidAlternatives(): void
+    {
+        $definition = new CollectionDefinitionDTO(\stdClass::class, [
+            new CollectionFieldPolicyDTO('id', false, true, true, true, ['eq', 'in', 'notIn']),
+            new CollectionFieldPolicyDTO('locked', false, true, false, false, ['neq']),
+            new CollectionFieldPolicyDTO('name', true, false, true, true),
+        ]);
+        $resolver = new CollectionQueryRequestResolver();
+
+        $query = $resolver->resolve(Request::create('/items', 'GET', [
+            'q' => '   ',
+            'filter' => [
+                'locked' => 'ignored',
+                'id' => [
+                    0 => 'ignored',
+                    'in' => 'not-a-list',
+                    'notIn' => [1, ['nested']],
+                    'eq' => '7',
+                ],
+            ],
+            'sort' => 'name',
+            'fields' => 'name,locked',
+        ]), $definition);
+
+        self::assertNull($query->search);
+        self::assertCount(1, $query->filters);
+        self::assertSame('eq', $query->filters[0]->operator);
+        self::assertSame('7', $query->filters[0]->value);
+        self::assertSame('asc', $query->sorts[0]->direction);
+        self::assertSame(['name'], $query->fields);
+        self::assertNull($query->cursor);
+
+        $validMembership = $resolver->resolve(Request::create('/items', 'GET', [
+            'filter' => ['id' => ['notIn' => [2, 3]]],
+        ]), $definition);
+        self::assertSame('notIn', $validMembership->filters[0]->operator);
+        self::assertSame([2, 3], $validMembership->filters[0]->value);
+
+        $encode = static fn (mixed $value): string => rtrim(
+            strtr(base64_encode(json_encode($value, JSON_THROW_ON_ERROR)), '+/', '-_'),
+            '=',
+        );
+
+        foreach ([
+            str_repeat('a', 4097),
+            '*',
+            rtrim(strtr(base64_encode('{'), '+/', '-_'), '='),
+            $encode([1, 2]),
+            $encode(['id' => ['nested']]),
+        ] as $cursor) {
+            self::assertNull($resolver->resolve(
+                Request::create('/items', 'GET', ['cursor' => $cursor]),
+                $definition,
+            )->cursor);
+        }
+    }
 }

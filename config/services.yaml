@@ -3,8 +3,8 @@ services:
         autowire: true
         autoconfigure: true
 
-    App\Collectioning\Factory\:
-        resource: '../src/Factory/'
+    App\Collectioning\Repository\:
+        resource: '../src/Repository/'
 
     App\Collectioning\Resolver\:
         resource: '../src/Resolver/'
@@ -12,12 +12,12 @@ services:
     App\Collectioning\Service\:
         resource: '../src/Service/'
 
-    App\Collectioning\ServiceInterface\CollectionAggregationProcessorInterface: '@App\Collectioning\Service\DoctrineCollectionAggregationProcessor'
-    App\Collectioning\ServiceInterface\CollectionDefinitionFactoryInterface: '@App\Collectioning\Factory\DoctrineCollectionDefinitionFactory'
-    App\Collectioning\ServiceInterface\CollectionFacetProcessorInterface: '@App\Collectioning\Service\DoctrineCollectionFacetProcessor'
+    App\Collectioning\ServiceInterface\CollectionAggregationProcessorInterface: '@App\Collectioning\Repository\CollectionDoctrineAggregationRepository'
+    App\Collectioning\ServiceInterface\CollectionDefinitionFactoryInterface: '@App\Collectioning\Repository\CollectionDoctrineDefinitionRepository'
+    App\Collectioning\ServiceInterface\CollectionFacetProcessorInterface: '@App\Collectioning\Repository\CollectionDoctrineFacetRepository'
     App\Collectioning\ServiceInterface\CollectionQueryPlannerInterface: '@App\Collectioning\Service\CollectionQueryPlanner'
-    App\Collectioning\ServiceInterface\CollectionQueryProcessorInterface: '@App\Collectioning\Service\DoctrineCollectionQueryProcessor'
+    App\Collectioning\ServiceInterface\CollectionQueryProcessorInterface: '@App\Collectioning\Repository\CollectionDoctrineQueryRepository'
     App\Collectioning\ServiceInterface\CollectionQueryRequestResolverInterface: '@App\Collectioning\Resolver\CollectionQueryRequestResolver'
     App\Collectioning\ServiceInterface\CollectionRequestReaderInterface: '@App\Collectioning\Service\CollectionRequestReader'
     App\Collectioning\ServiceInterface\CollectionScopedReaderInterface: '@App\Collectioning\Service\CollectionScopedReader'
-    App\Collectioning\ServiceInterface\CollectionRealtimePublisherInterface: '@App\Collectioning\Service\MercureCollectionRealtimePublisher'
+    App\Collectioning\ServiceInterface\CollectionRealtimePublisherInterface: '@App\Collectioning\Service\CollectionMercureRealtimePublisher'

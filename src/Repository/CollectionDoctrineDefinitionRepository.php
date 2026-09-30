@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Collectioning\Factory;
+namespace App\Collectioning\Repository;
 
 use App\Collectioning\DTO\CollectionDefinitionDTO;
 use App\Collectioning\DTO\CollectionFieldPolicyDTO;
@@ -10,7 +10,7 @@ use App\Collectioning\ServiceInterface\CollectionDefinitionFactoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
-final readonly class DoctrineCollectionDefinitionFactory implements CollectionDefinitionFactoryInterface
+final readonly class CollectionDoctrineDefinitionRepository implements CollectionDefinitionFactoryInterface
 {
     public function __construct(private ManagerRegistry $managerRegistry)
     {
