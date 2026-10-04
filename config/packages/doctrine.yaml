@@ -1,0 +1,5 @@
+doctrine:
+  dbal:
+    url: 'sqlite:///%kernel.project_dir%/var/collectioning.db'
+  orm:
+    auto_mapping: false

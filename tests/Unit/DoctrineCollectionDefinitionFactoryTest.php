@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Collectioning\Tests\Unit;
 
-use App\Collectioning\Factory\DoctrineCollectionDefinitionFactory;
+use App\Collectioning\Repository\CollectionDoctrineDefinitionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\ManagerRegistry;
@@ -37,7 +37,7 @@ final class DoctrineCollectionDefinitionFactoryTest extends TestCase
             ->with(\stdClass::class)
             ->willReturn($manager);
 
-        $definition = (new DoctrineCollectionDefinitionFactory($registry))->create(\stdClass::class);
+        $definition = (new CollectionDoctrineDefinitionRepository($registry))->create(\stdClass::class);
 
         self::assertSame(['id'], $definition->identifierFields);
         self::assertCount(3, $definition->fields);
@@ -65,7 +65,7 @@ final class DoctrineCollectionDefinitionFactoryTest extends TestCase
             ->with(\stdClass::class)
             ->willReturn(null);
 
-        $factory = new DoctrineCollectionDefinitionFactory($registry);
+        $factory = new CollectionDoctrineDefinitionRepository($registry);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('No Doctrine ORM manager for collection entity "stdClass".');

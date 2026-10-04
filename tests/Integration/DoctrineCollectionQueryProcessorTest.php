@@ -10,8 +10,8 @@ use App\Collectioning\DTO\CollectionFilterDTO;
 use App\Collectioning\DTO\CollectionPageDTO;
 use App\Collectioning\DTO\CollectionQueryDTO;
 use App\Collectioning\DTO\CollectionSortDTO;
+use App\Collectioning\Repository\CollectionDoctrineQueryRepository;
 use App\Collectioning\Service\CollectionQueryPlanner;
-use App\Collectioning\Service\DoctrineCollectionQueryProcessor;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping as ORM;
@@ -231,12 +231,12 @@ final class DoctrineCollectionQueryProcessorTest extends TestCase
         self::assertFalse($result->diagnostics['searchApplied']);
     }
 
-    private function processor(): DoctrineCollectionQueryProcessor
+    private function processor(): CollectionDoctrineQueryRepository
     {
         $registry = $this->createStub(ManagerRegistry::class);
         $registry->method('getManagerForClass')->willReturn($this->entityManager);
 
-        return new DoctrineCollectionQueryProcessor($registry, new CollectionQueryPlanner());
+        return new CollectionDoctrineQueryRepository($registry, new CollectionQueryPlanner());
     }
 
     private function definition(): CollectionDefinitionDTO

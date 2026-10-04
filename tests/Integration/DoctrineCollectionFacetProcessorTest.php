@@ -10,8 +10,8 @@ use App\Collectioning\DTO\CollectionFieldPolicyDTO;
 use App\Collectioning\DTO\CollectionFilterDTO;
 use App\Collectioning\DTO\CollectionPageDTO;
 use App\Collectioning\DTO\CollectionQueryDTO;
+use App\Collectioning\Repository\CollectionDoctrineFacetRepository;
 use App\Collectioning\Service\CollectionQueryPlanner;
-use App\Collectioning\Service\DoctrineCollectionFacetProcessor;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping as ORM;
@@ -129,12 +129,12 @@ final class DoctrineCollectionFacetProcessorTest extends TestCase
         self::assertSame(1, $results[0]->buckets[1]->count);
     }
 
-    private function processor(): DoctrineCollectionFacetProcessor
+    private function processor(): CollectionDoctrineFacetRepository
     {
         $registry = $this->createStub(ManagerRegistry::class);
         $registry->method('getManagerForClass')->willReturn($this->entityManager);
 
-        return new DoctrineCollectionFacetProcessor($registry, new CollectionQueryPlanner());
+        return new CollectionDoctrineFacetRepository($registry, new CollectionQueryPlanner());
     }
 
     private function definition(): CollectionDefinitionDTO

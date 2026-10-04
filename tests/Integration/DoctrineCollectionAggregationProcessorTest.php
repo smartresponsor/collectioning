@@ -10,8 +10,8 @@ use App\Collectioning\DTO\CollectionFieldPolicyDTO;
 use App\Collectioning\DTO\CollectionFilterDTO;
 use App\Collectioning\DTO\CollectionPageDTO;
 use App\Collectioning\DTO\CollectionQueryDTO;
+use App\Collectioning\Repository\CollectionDoctrineAggregationRepository;
 use App\Collectioning\Service\CollectionQueryPlanner;
-use App\Collectioning\Service\DoctrineCollectionAggregationProcessor;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping as ORM;
@@ -119,12 +119,12 @@ final class DoctrineCollectionAggregationProcessorTest extends TestCase
         self::assertSame([], $result->rows);
     }
 
-    private function processor(): DoctrineCollectionAggregationProcessor
+    private function processor(): CollectionDoctrineAggregationRepository
     {
         $registry = $this->createStub(ManagerRegistry::class);
         $registry->method('getManagerForClass')->willReturn($this->entityManager);
 
-        return new DoctrineCollectionAggregationProcessor($registry, new CollectionQueryPlanner());
+        return new CollectionDoctrineAggregationRepository($registry, new CollectionQueryPlanner());
     }
 
     private function definition(): CollectionDefinitionDTO

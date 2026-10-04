@@ -2,7 +2,7 @@
   "name": "collectioning/collection",
   "description": "Symfony collection-query primitive for filtering, sorting, pagination, projection, counts and realtime collection invalidation.",
   "type": "symfony-bundle",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "proprietary",
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
@@ -20,8 +20,6 @@
     "friendsofphp/php-cs-fixer": "^3.95",
     "phpstan/phpstan": "^2.2",
     "phpunit/phpunit": "^13.3",
-    "symfony/test-pack": "^1.2",
-    "symfony/panther": "^2.4",
     "gating/gate": "dev-master"
   },
   "autoload": {
@@ -49,28 +47,18 @@
     "cs:check": "php-cs-fixer fix --dry-run --diff",
     "cs:fix": "php-cs-fixer fix",
     "gate": "@php vendor/bin/gating check --target=.",
-    "scan": "@php vendor/bin/gating scan --target=.",
-    "quality:ui": "npm test",
-    "test:behavioral-coverage": "@php tool/behavioral-coverage.php",
     "quality": [
       "@cs:check",
       "@phpstan",
       "@test",
-      "@quality:ui",
-      "@test:behavioral-coverage",
       "@gate"
     ]
   },
   "repositories": [
     {
-      "type": "path",
-      "url": "../Gating",
-      "options": {
-        "symlink": true,
-        "versions": {
-          "gating/gate": "dev-master"
-        }
-      }
+      "type": "vcs",
+      "url": "https://github.com/smartresponsor/gating.git",
+      "no-api": true
     }
   ]
 }

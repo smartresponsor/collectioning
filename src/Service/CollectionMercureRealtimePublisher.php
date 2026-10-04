@@ -9,7 +9,7 @@ use App\Collectioning\ServiceInterface\CollectionRealtimePublisherInterface;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 
-final readonly class MercureCollectionRealtimePublisher implements CollectionRealtimePublisherInterface
+final readonly class CollectionMercureRealtimePublisher implements CollectionRealtimePublisherInterface
 {
     public function __construct(
         private HubInterface $hub,
